@@ -1,0 +1,63 @@
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ThingSpeak.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial mySerial(5, 6);
+
+unsigned long myChannelNumber = 858206;
+const char*apiKey = "R1CXSS60K3910W8O"; 
+const char* ssid = "mani";
+const char* password = "manimani";
+const char* server = "api.thingspeak.com";
+int statusCode = 0;
+String Value; 
+ 
+ WiFiClient client;
+
+ void setup(void) 
+{ 
+ Serial.begin(9600); 
+ Serial.print("Connecting to the Newtork");
+ WiFi.begin(ssid, password);
+ while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+ Serial.println("WiFi connected");  
+ ThingSpeak.begin(client);
+  
+  mySerial.begin(115200);
+  
+  }
+
+void loop(void) 
+{ 
+ //Value =readTSData( myChannelNumber, aField );
+ Value = ThingSpeak.readStringField(myChannelNumber,1, apiKey);
+//  Value = thingSpeakRead(myChannelNumber)
+  statusCode = ThingSpeak.getLastReadStatus();
+  if (statusCode == 200)
+  {
+    Serial.println(Value);
+    SendMessage();
+  }
+  else
+  {
+    Serial.println("Unable to read channel / No internet connection");
+  }
+  delay(100);
+}
+
+void SendMessage()
+{
+  mySerial.println("AT+CMGF=1");
+  delay(1000);  
+  mySerial.println("AT+CMGS=\"+917207353147\"\r"); 
+  delay(1000);
+  mySerial.println(Value);
+  delay(100);
+   mySerial.println((char)26);
+  delay(1000);
+}
